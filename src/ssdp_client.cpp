@@ -1,5 +1,6 @@
 #include "ssdp_client.h"
 #include "constants.h"
+#include "http_client.h"
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
@@ -7,6 +8,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <cerrno>
+#include <regex>
+#include <thread>
 
 SSDPClient::SSDPClient(Reactor& reactor, const std::string& name)
     : reactor_(reactor), name_(name), sock_(-1) {
@@ -86,7 +89,22 @@ void SSDPClient::handle_read(int fd) {
     inet_ntop(AF_INET, &sender_addr.sin_addr, sender_ip, INET_ADDRSTRLEN);
     std::cout << "[" << name_ << "] Response from " << sender_ip << ":" << ntohs(sender_addr.sin_port) << std::endl;
 
+    std::string response(buffer);
+
     // Print the received data
-    std::cout << buffer << std::endl;
+    std::cout << response << std::endl;
     std::cout << "----------------------------------------------------" << std::endl;
+
+    // Parse LOCATION header using a case-insensitive regex
+    std::regex location_regex(R"(LOCATION:\s*(http[^\r\n]+))", std::regex_constants::icase);
+    std::smatch match;
+    if (std::regex_search(response, match, location_regex)) {
+        std::string location_url = match[1].str();
+        std::cout << "[" << name_ << "] Found XML Location: " << location_url << std::endl;
+
+        // Spawn a detached thread to fetch the XML without blocking the event loop
+        std::thread([location_url]() {
+            http_client::fetch_and_print_xml(location_url);
+        }).detach();
+    }
 }

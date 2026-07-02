@@ -1,2 +1,1 @@
-ssdp_client
-*.o
+build/
