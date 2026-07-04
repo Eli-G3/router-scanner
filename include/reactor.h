@@ -13,7 +13,7 @@ public:
     ~Reactor() = default;
 
     // Register a file descriptor with a read callback
-    void register_fd(int fd, Callback callback);
+    void register_fd(int fd, Callback&& callback);
 
     // Unregister a file descriptor
     void unregister_fd(int fd);

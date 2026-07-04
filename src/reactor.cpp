@@ -4,7 +4,7 @@
 
 Reactor::Reactor() : running_(false) {}
 
-void Reactor::register_fd(int fd, Callback callback) {
+void Reactor::register_fd(int fd, Callback&& callback) {
     callbacks_[fd] = std::move(callback);
 
     struct pollfd pfd;
