@@ -1,13 +1,20 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -pthread -Iinclude
 
-TARGET = ssdp_client
-SRC = ssdp_client.cpp
+TARGET = build/ssdp_client
+SRCS = src/main.cpp src/reactor.cpp src/ssdp_client.cpp src/http_client.cpp
+OBJS = $(patsubst src/%.cpp,build/%.o,$(SRCS))
 
-all: $(TARGET)
+all: build_dir $(TARGET)
 
-$(TARGET): $(SRC)
-	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SRC)
+build_dir:
+	mkdir -p build
+
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS)
+
+build/%.o: src/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(TARGET)
+	rm -rf build/*
